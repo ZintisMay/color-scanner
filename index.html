@@ -36,7 +36,8 @@
   </p>
   <br>
   <img id="preview" />
-  <div id="colors"></div>
+  <div id="colorsDiv"></div>
+  <div id="logDiv"></div>
 
 
   <canvas id="canvas" style="display:none;"></canvas>
@@ -46,7 +47,8 @@
     const fileInput = document.getElementById('fileInput');
     const cameraInput = document.getElementById('cameraInput');
     const preview = document.getElementById('preview');
-    const colorsDiv = document.getElementById('colors');
+    const colorsDiv = document.getElementById('colorsDiv');
+    const logDiv = document.getElementById('logDiv');
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
 
@@ -131,14 +133,19 @@
     ];
 
     function processImage(event) {
+      screenLog("processImage")
       const file = event.target.files[0];
+
+      screenLog("event.target.files[0]")
       if (!file) return;
       const reader = new FileReader();
-
+      screenLog("reader")
 
       reader.onload = (e) => {
+        screenLog("onload")
         const img = new Image();
         img.onload = () => {
+          screenLog("image load")
           preview.src = img.src;
 
 
@@ -170,6 +177,7 @@
             const key = `${r},${g},${b}`;
             colorCounts[key] = (colorCounts[key] || 0) + 1;
           }
+          screenLog("color counts")
           // }
 
 
@@ -179,6 +187,7 @@
           const colorBuckets = bucketizeColors(sortedColors)
 
           console.log("colorBuckets", colorBuckets)
+          screenLog("buckets")
 
 
           // Show top 5 colors
@@ -196,6 +205,7 @@
             `
             colorsDiv.appendChild(box);
           });
+          screenLog("8 colors done")
 
           colorsDiv.appendChild(document.createElement("br"));
 
@@ -213,13 +223,35 @@
             `
             colorsDiv.appendChild(box);
           })
+          screenLog("buckets done")
         };
         img.src = e.target.result;
       };
+      screenLog("try to read")
       reader.readAsDataURL(file);
+      screenLog("finished")
     }
 
+
+    //     const img = new Image();
+    // img.src = URL.createObjectURL(file);
+    // img.onload = () => {
+    //   const canvas = document.createElement('canvas');
+    //   const scale = Math.min(1024 / img.width, 1024 / img.height, 1);
+    //   canvas.width = img.width * scale;
+    //   canvas.height = img.height * scale;
+    //   const ctx = canvas.getContext('2d');
+    //   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    //   canvas.toBlob(blob => {
+    //     // process smaller blob
+    //   }, 'image/jpeg', 0.9);
+    // };
+
     // console.log(bucketizeColors(colors));
+
+    function screenLog(text) {
+      logDiv.innerHTML += '<br>' + text
+    }
   </script>
 
 </html>
