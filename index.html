@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Color Detector</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+
+    #preview {
+      max-width: 300px;
+      margin-top: 10px;
+    }
+
+    .color-box {
+      width: 50px;
+      height: 50px;
+      display: inline-block;
+      margin: 5px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Image Color Detector</h1>
+  <p>File
+    <input type="file" id="fileInput" accept="image/png, image/jpeg">
+  </p>
+  <p>Camera
+    <input type="file" accept="image/*" capture="environment" id="cameraInput" />
+  </p>
+  <br>
+  <img id="preview" />
+  <div id="colors"></div>
+
+
+  <canvas id="canvas" style="display:none;"></canvas>
+
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const cameraInput = document.getElementById('cameraInput');
+    const preview = document.getElementById('preview');
+    const colorsDiv = document.getElementById('colors');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    cameraInput.addEventListener('change', processImage)
+
+
+    fileInput.addEventListener('change', processImage);
+
+    function capToTwoDecimals(num) {
+      return num.toFixed(2);
+    }
+
+    function chunkArray(arr, size) {
+      const result = [];
+      for (let i = 0; i < arr.length; i += size) {
+        result.push(arr.slice(i, i + size));
+      }
+      return result;
+    }
+
+    const PRIMARY_COLORS = {
+      red: [255, 0, 0],
+      green: [0, 255, 0],
+      blue: [0, 0, 255],
+      cyan: [0, 255, 255],
+      magenta: [255, 0, 255],
+      yellow: [255, 255, 0],
+      black: [0, 0, 0],
+      white: [255, 255, 255],
+    };
+
+    // Euclidean distance in RGB space
+    function colorDistance(c1, c2) {
+      return Math.sqrt(
+        Math.pow(c1[0] - c2[0], 2) +
+        Math.pow(c1[1] - c2[1], 2) +
+        Math.pow(c1[2] - c2[2], 2)
+      );
+    }
+
+    // Assign a single color to the closest bucket
+    function getClosestPrimary(color) {
+      let closest = null;
+      let minDist = Infinity;
+
+      for (const [name, rgb] of Object.entries(PRIMARY_COLORS)) {
+        const dist = colorDistance(color.split(","), rgb);
+        if (dist < minDist) {
+          minDist = dist;
+          closest = name;
+        }
+      }
+      // console.log("getClosestPrimary", color, closest)
+      return closest;
+    }
+
+    // Classify an array of colors
+    function bucketizeColors(colors) {
+      console.log("bucketize")
+      console.log(colors)
+      const buckets = {
+        red: 0,
+        green: 0,
+        blue: 0,
+        cyan: 0,
+        magenta: 0,
+        yellow: 0,
+        black: 0,
+        white: 0,
+      }
+      colors.forEach(c => {
+        buckets[getClosestPrimary(c[0])] += c[1]
+      });
+      return buckets
+    }
+
+    // Example usage
+    const colors = [
+      [200, 50, 50],
+      [20, 240, 200],
+      [120, 120, 255]
+    ];
+
+    function processImage(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+
+
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          preview.src = img.src;
+
+
+          // Draw image to canvas
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+
+
+          // Get pixel data
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const rowSize = ctx.width * 4
+          const data = imageData.data;
+
+
+          let colorCounts = {};
+          // console.log("pixel count", data.length)
+          let pixelCount = 0
+
+          // let rows = chunkArray(data, rowSize);
+          // for (let j = 0; j < rows.length; j++) {
+          //   const row = rows[j]
+          //   let hasSeenBlack = false;
+          for (let i = 0; i < data.length; i += 4) { // sample every 50 pixels to speed up
+            pixelCount++
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            const key = `${r},${g},${b}`;
+            colorCounts[key] = (colorCounts[key] || 0) + 1;
+          }
+          // }
+
+
+          // Sort colors by frequency
+          const sortedColors = Object.entries(colorCounts).sort((a, b) => b[1] - a[1]);
+
+          const colorBuckets = bucketizeColors(sortedColors)
+
+          console.log("colorBuckets", colorBuckets)
+
+
+          // Show top 5 colors
+          colorsDiv.innerHTML = '';
+          sortedColors.slice(0, 8).forEach(([rgb]) => {
+            const box = document.createElement('div');
+            box.className = 'color-box';
+            box.style.backgroundColor = `rgb(${rgb})`;
+            box.style.fontSize = '10px'
+            let percentageOfImage = ((colorCounts[rgb] / pixelCount) * 100).toFixed(2)
+            box.innerHTML = `${rgb}<br>
+          ${colorCounts[rgb]}<br>
+
+          ${percentageOfImage}%
+            `
+            colorsDiv.appendChild(box);
+          });
+
+          colorsDiv.appendChild(document.createElement("br"));
+
+          Object.entries(colorBuckets).forEach(([colorName, colorCount]) => {
+            console.log(colorName, colorCount)
+            const box = document.createElement('div');
+            box.className = 'color-box';
+            box.style.backgroundColor = colorName;
+            box.style.fontSize = '10px'
+            let percentageOfImage = ((colorCount / pixelCount) * 100).toFixed(2)
+            box.innerHTML = `${colorName}<br>
+          ${colorCount}<br>
+
+          ${percentageOfImage}%
+            `
+            colorsDiv.appendChild(box);
+          })
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // console.log(bucketizeColors(colors));
+  </script>
+
+</html>
