@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Color Detector</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+
+    #preview {
+      max-width: 300px;
+      margin-top: 10px;
+    }
+
+    .color-box {
+      width: 50px;
+      height: 50px;
+      display: inline-block;
+      margin: 5px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Image Color Detector</h1>
+  <p>File
+    <input type="file" id="fileInput" accept="image/png, image/jpeg">
+  </p>
+  <p>Camera Photo
+    <input type="file" accept="image/*" capture="environment" id="cameraInput" />
+  </p>
+  <br>
+  <img id="preview" />
+  <div id="colorsDiv"></div>
+  <div id="logDiv"></div>
+
+
+  <canvas id="canvas" style="display:none;"></canvas>
+
+
+</html>
+<!-- navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+  .then(stream => {
+    const video = document.createElement("video");
+    video.srcObject = stream;
+    video.play();
+
+    // later, capture a frame
+    const canvas = document.createElement("canvas");
+    canvas.width = 1024;
+    canvas.height = 768;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(blob => {
+      console.log("Capped snapshot size:", blob.size);
+    }, "image/jpeg", 0.8);
+  }); -->

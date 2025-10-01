@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <h1>Get User Media</h1>
+  <button id="openCamera">Start Camera</button>
+  <button id="takePhoto">Capture Photo</button>
+  <video id="preview" autoplay playsinline style="max-width:100%; display:none;"></video>
+  <canvas id="snapshot" style="display:none;"></canvas>
+  <img id="output" alt="Captured photo" style="max-width:100%;" />
+  <p id="imageDetails"></p>
+
+  <script>
+    const openCameraButton = document.getElementById("openCamera");
+    const takePhotoButton = document.getElementById("takePhoto");
+    const imageDetails = document.getElementById("imageDetails");
+    const video = document.getElementById("preview");
+    const canvas = document.getElementById("snapshot");
+    const imgElement = document.getElementById("output");
+
+
+    let stream;
+
+    // Ask for the back camera
+    openCameraButton.onclick = async () => {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert("Camera API not supported on this browser.");
+        return;
+      }
+
+      try {
+        // start video
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { exact: "environment" }, // back camera
+            width: { ideal: 768 },                // cap resolution
+            height: { ideal: 768 }
+          }
+        });
+        video.style.display = "block";
+        video.srcObject = stream;
+      } catch (err) {
+        console.error("Camera error:", err);
+        alert("Could not access the camera.");
+      }
+    };
+
+    // Capture a frame from the video
+    takePhotoButton.addEventListener("click", () => {
+      const w = video.videoWidth;
+      const h = video.videoHeight;
+
+      canvas.width = w;
+      canvas.height = h;
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, w, h);
+
+      // Convert to Blob (resized JPEG/WebP)
+      canvas.toBlob(blob => {
+        // preview
+        imgElement.src = URL.createObjectURL(blob);
+
+        // TODO: upload `blob` with fetch or FormData
+        console.log("Captured size:", blob.size, "bytes");
+        imageDetails.innerHTML = `blob size: ${blob.size} bytes`
+      }, "image/jpeg", 0.8);
+    });
+  </script>
+
+</body>
+
+</html>
