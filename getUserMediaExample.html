@@ -5,12 +5,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+
 </head>
 
 <body>
   <h1>Get User Media</h1>
   <button id="openCamera">Start Camera</button>
   <button id="takePhoto">Capture Photo</button>
+  <button id="findQrCode">Find QR</button>
   <video id="preview" autoplay playsinline style="max-width:100%; display:none;"></video>
   <canvas id="snapshot" style="display:none;"></canvas>
   <img id="output" alt="Captured photo" style="max-width:100%;" />
@@ -23,6 +26,8 @@
     const video = document.getElementById("preview");
     const canvas = document.getElementById("snapshot");
     const imgElement = document.getElementById("output");
+    const findQrCode = document.getElementById("findQrCode")
+
 
 
     let stream;
@@ -72,6 +77,40 @@
         imageDetails.innerHTML = `blob size: ${blob.size} bytes`
       }, "image/jpeg", 0.8);
     });
+
+    findQrCode.onclick = () => {
+
+      alert('0')
+      const ctx = canvas.getContext('2d');
+      // canvas.width = imgElement.width;
+      // canvas.height = imgElement.height;
+      // ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
+      alert('1')
+      // Get image data
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+      alert(`2 ${!!imageData}, ${imageData.width}, ${imageData.height}`)
+      // Decode the QR code
+      try {
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        alert(!!code)
+
+        alert('3')
+        if (code) {
+          alert('QR Code data: ' + code.data);
+        } else {
+          alert('No QR code found.');
+        }
+      } catch (e) {
+        alert("problem")
+        alert(e)
+      }
+
+
+
+      alert('4')
+    };
+
   </script>
 
 </body>
