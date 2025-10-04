@@ -80,22 +80,17 @@
 
     findQrCode.onclick = () => {
 
-      alert('0')
       const ctx = canvas.getContext('2d');
       // canvas.width = imgElement.width;
       // canvas.height = imgElement.height;
       // ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
-      alert('1')
       // Get image data
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-      alert(`2 ${!!imageData}, ${imageData.width}, ${imageData.height}`)
       // Decode the QR code
       try {
         const code = jsQR(imageData.data, imageData.width, imageData.height);
-        alert(!!code)
 
-        alert('3')
         if (code) {
           alert('QR Code data: ' + code.data);
         } else {
@@ -108,7 +103,6 @@
 
 
 
-      alert('4')
     };
 
   </script>
